@@ -1,0 +1,924 @@
+
+/* Reset some default styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+body {
+  margin: 0;            /* remove browser margin */
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #580016;
+  color: #f5f5f5;  /* light background so header stands out */
+  /* remove min-width which can force horizontal scrolling on mobile */
+  /* min-width: fit-content; */
+}
+
+/* Header */
+header {
+  background: #f1f1f1;
+  padding: 0rem 1rem; /* padding gives breathing room */
+  color: #232020; 
+  position: relative; /* keeps nav positioned relative to header */
+  z-index: 1000;      /* ensures it stays above content */
+}
+  
+  .header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 100%;
+    margin: 0 auto;
+    min-height: 60px
+  }
+  
+  /* Logo */
+  .logo img {
+    height: 75px;
+    width: auto;
+  }
+
+  #home{
+    background: white;
+    padding: 1rem;
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* subtle shadow */
+    text-align: center;
+    margin: 1rem auto;
+    justify-content: center;
+    max-width: 50%;
+  }
+   /* Logo */
+  .home-img {
+    height: auto;
+    width: 60%;
+    align-items: center;
+  }
+
+/* Make all tournament sections visually match the home card */
+section[id^="tournament-"] {
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin: 1rem auto;
+  justify-content: center;
+  max-width: 50%;
+}
+
+/* Ensure images inside tournament sections behave like the home image */
+section[id^="tournament-"] .home-img,
+section[id^="tournament-"] img {
+  display: block;
+  margin: 0.5rem auto 0;
+  max-width: 100%;
+  height: auto;
+  width: 60%;
+}
+
+/* Standings removed — styles cleaned up */
+
+/* Tables on small screens should be scrollable and readable */
+@media (max-width: 768px) {
+  .logo img { height: 56px; }
+  nav ul { gap: 1rem; }
+  .home-img { width: 90%; }
+  #schedule { padding: 0.25rem 0.5rem; }
+  .site-footer .footer-content { padding: 0 1rem; }
+  /* Let the table wrapper take full width and enable comfortable padding */
+  table { font-size: 0.95rem; table-layout: auto; }
+  th, td { padding: 10px 8px; white-space: normal; word-break: break-word; }
+}
+
+@media (max-width: 480px) {
+  .logo img { height: 48px; }
+  nav ul { gap: 0.8rem; }
+  nav a { font-size: 0.95rem; }
+  .home-img { width: 100%; }
+  th, td { padding: 8px 6px; white-space: normal; word-break: break-word; }
+  /* Make search input and other full-width controls comfortable */
+  #searchInput { font-size: 0.95rem; }
+}
+
+/* Center the image inside the #schedule section and make it responsive */
+#schedule img,
+#schedule .home-img {
+  display: block;
+  margin: 0 auto; /* centers the image horizontally */
+  max-width: 100%; /* ensures it doesn't overflow the viewport */
+  height: auto;
+}
+  
+  /* Navigation */
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Dropdown menu for Tournaments */
+  .nav-dropdown { position: relative; }
+  .nav-dropdown .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #f1f1f1;
+    color: #232020;
+    min-width: max-content; /* size to longest item */
+    max-width: 95vw; /* cap width on very small viewports */
+    white-space: nowrap; /* prevent wrapping */
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    padding: 0.5rem 0;
+    z-index: 2000;
+  }
+  .nav-dropdown .dropdown-menu li { list-style: none; }
+  .nav-dropdown .dropdown-menu a { display: block; padding: 8px 12px; color: #232020; text-decoration: none; }
+  .nav-dropdown .dropdown-menu a:hover { background: #e9e9e9; }
+  .nav-dropdown .dropdown-menu a { white-space: nowrap; }
+  .nav-dropdown.open .dropdown-menu { display: block; }
+  
+  nav a {
+    color: #232020;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: color 0.3s;
+  }
+  
+  nav a:hover {
+    color: #800000; /* gold */
+  }
+  
+  /* Hamburger icon */
+  .menu-toggle {
+    display: none;
+    font-size: 1.8rem;
+    color: #232020;
+    cursor: pointer;
+  }
+
+/* Desktop: open dropdown on hover instead of click for pointer devices */
+@media (hover: hover) and (min-width: 769px) {
+  .nav-dropdown:hover .dropdown-menu { display: block; }
+  .nav-dropdown .dropdown-toggle { cursor: default; }
+}
+  
+/* Mobile menu */
+@media (max-width: 768px) {
+  nav {
+    display: none;
+    background: #f1f1f1;
+    position: absolute;
+    top: 100%; /* drops menu directly below header */
+    left: 0;
+    width: 100%;
+    padding: 1rem 0;
+  }
+
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  nav.show {
+    display: block;
+  }
+
+  .menu-toggle {
+    display: block;
+  }
+}
+/* Main content */
+main {
+  min-width: 100%;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  min-height: 100vh; /* ensures footer at bottom */
+}
+
+#schedule {
+  /* Match other content cards (e.g. Current Average) for consistent width */
+  /* max-width: 900px; */
+  text-align: center; /* center headers and inline content */
+  margin: 1.5rem auto;
+  padding: 0.5rem 1rem;
+}
+#searchInput {
+padding: 10px;
+margin-bottom: 1rem;
+border: 1px solid #ccc;
+border-radius: 5px;
+font-size: 1rem;
+
+}
+
+/* Table container: makes tables use full available width and allow horizontal scroll on small screens */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto; /* allows horizontal scrolling on very small screens */
+  -webkit-overflow-scrolling: touch;
+  margin: 1rem 0;
+}
+
+#table {
+  width: 100%;
+  text-align: left;
+  margin: 1rem auto;
+}
+
+/* Make table wrappers inside the schedule respect the schedule card width */
+#schedule .table-responsive { max-width: 100%; margin-left: auto; margin-right: auto; }
+#schedule #table { max-width: 100%; margin-left: auto; margin-right: auto; }
+/* Make table span full width with 10px border */
+table {
+  border-collapse: collapse;
+  background-color: #f1f1f1;
+  box-shadow: none;             /* optional, border is strong enough  */
+  border: 3px solid #333;     
+  color: #333;
+  width: 100%; /* make table span its container */
+  table-layout: auto; /* allow columns to size to content and wrap */
+  text-align: left;
+    padding: 1rem;
+    /* border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); subtle shadow */
+    margin: 1rem auto;
+    justify-content: center;
+
+}
+
+/* Table cells: allow wrapping so horizontal scroll isn't required for normal content */
+th, td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  white-space: normal; /* allow wrapping */
+  word-break: break-word; /* break long words or URLs */
+  vertical-align: top;
+}
+
+/* Allow long text to wrap inside a cell on narrow screens */
+td p, td span, td div {
+  white-space: normal;
+  word-break: break-word;
+}
+
+#contactTable{
+  min-width: min-content;
+  text-align: center;
+   margin: 0 auto;  
+}
+/* Contact section layout: center a card, limit width, and style table inside */
+#contact {
+  /* keep section visibility behavior intact (don't set display) */
+  margin: 1rem auto;
+  padding: 0 1rem;
+}
+
+#contact .contact-card {
+  background: #ffffff; /* light card */
+  color: #232020;
+  width: 100%;
+  max-width: 900px;
+  border-radius: 8px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: block;
+  margin: 0 auto; /* center the card within the section */
+  gap: 1rem;
+}
+
+/* Contact card title centered above the table */
+.contact-card-title {
+  text-align: center;
+  margin: 0 0 0.25rem 0;
+  color: #232020;
+  font-size: 1.5rem;
+}
+
+/* Make the contact table clean inside the card */
+#contact .contact-card .table-responsive {
+  margin: 0;
+}
+
+#contactTable {
+  width: 100%;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: transparent;
+}
+
+#contactTable th, #contactTable td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  white-space: normal;
+  color: #232020;
+}
+
+#contactTable thead th {
+  background: transparent;
+  font-weight: 700;
+  color: #800000;
+}
+
+/* Contact prompt inside the card */
+.contact-prompt {
+  background-color: transparent; /* use card background */
+  color: #232020;
+  padding: 0;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.contact-prompt p { margin: 0; }
+
+/* Small screens: make contact card full width */
+@media (max-width: 768px) {
+  #contact {
+    padding: 0 0.5rem;
+  }
+  #contact .contact-card {
+    padding: 0.75rem;
+    max-width: 100%;
+  }
+}
+
+
+/* Header row */
+th {
+  background-color: #333;
+  color: #ddd;
+}
+
+/* Hover effect */
+tr:hover {
+  background-color: #f9f9f9; /* lighter hover */
+}
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  background-color: #333;
+  color: #333;
+  margin-top: 2rem;
+}
+
+@media (max-width: 600px) {
+  nav {
+    flex-direction: column;
+  }
+
+  nav a {
+    margin: 0.5rem 0;
+  }
+}
+/* Only hide top-level page sections (keep nested sections visible, e.g. per-tournament anchors) */
+main > section {
+  display: none; /* hide top-level page sections (we show the active one) */
+  padding: 2rem 0;
+  /* Make section text use the same dark color as the nav for readability on the light card backgrounds */
+  color: #232020;
+}
+
+/* Column helpers for schedule table */
+/* Column helpers for schedule table */
+#scheduleTable td.col-date { white-space: nowrap; width: 1%; /* keep dates compact */ }
+
+/* Sponsor / House column: make slightly narrower to free room for Prepay */
+#scheduleTable td.col-house { max-width: 110px; white-space: normal; word-break: break-word; }
+
+/* Give the House (sponsor) column a smaller base min-width and a modest desktop increase */
+#scheduleTable th.col-house, #scheduleTable td.col-house {
+  min-width: 110px; /* narrower on most screens */
+}
+
+@media (min-width: 900px) {
+  /* Desktop: still keep sponsor column modest so Prepay has more space */
+  #scheduleTable th.col-house, #scheduleTable td.col-house { min-width: 140px; }
+}
+
+/* Prepay/payment column: increase min-width so payment buttons have more room */
+#scheduleTable th.col-prepay, #scheduleTable td.col-prepay {
+  min-width: 160px; /* base width */
+  text-align: center; /* center the payment buttons */
+}
+
+@media (min-width: 900px) {
+  #scheduleTable th.col-prepay, #scheduleTable td.col-prepay { min-width: 260px; }
+}
+
+main > section.active {
+  display: block; /* show only the active top-level section */
+}
+
+/* Per-tournament detail sections: hidden by default, shown when selected */
+#tournaments section[id^="tournament-"] {
+  display: none; /* hidden until selected */
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 320ms ease, opacity 250ms ease, margin 220ms ease;
+}
+
+/* When a tournament is the URL target, reveal it */
+#tournaments section[id^="tournament-"]:target,
+#tournaments section[id^="tournament-"].open {
+  display: block;
+  opacity: 1;
+  max-height: 2400px; /* large enough for content */
+  margin-top: 1rem;
+}
+
+/* Fade-in transition for sections */
+.fade-in {
+  animation: fadeIn 300ms ease-in forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Highlight the active nav link */
+nav a[aria-current="page"] {
+  color: #800000; /* same accent used elsewhere */
+  text-decoration: underline;
+}
+
+/* Contact Prompt Styling */
+.contact-prompt {
+  background-color: #f1f1f1;   /* subtle background */
+  color: #232020;              /* text color */
+  text-align: center;          /* center text */
+  padding: 1.5rem 1rem;        /* breathing room */
+  font-size: 1rem;             /* readable font size */
+  border-top: 2px solid #ccc;  /* optional subtle separation */
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+.contact-prompt a {
+  color: #0066cc;              /* link color */
+  text-decoration: none;       /* remove underline */
+  font-weight: 500;
+}
+
+.contact-prompt a:hover {
+  text-decoration: underline;  /* hover effect */
+}
+
+/* Social Media Footer */
+.site-footer {
+  background-color: #232020;
+  color: #f1f1f1;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.site-footer .footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column; /* stack text and icons on small screens */
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-footer .social-links a {
+  margin: 0 0.5rem;
+  display: inline-block;
+}
+
+.site-footer .social-links img {
+  width: 30px;  /* icon size */
+  height: 30px;
+  transition: transform 0.2s;
+}
+
+.site-footer .social-links img:hover {
+  transform: scale(1.1); /* subtle hover effect */
+}
+
+/* Make Facebook and YouTube icons slightly larger for emphasis */
+.site-footer .social-links img[src*="Facebook"],
+.site-footer .social-links img[src*="facebook"],
+.site-footer .social-links img[src*="youtube"],
+.site-footer .social-links img[src*="YouTube"],
+.site-footer .social-links .social-facebook img,
+.site-footer .social-links .social-youtube img {
+  width: 48px;
+  height: 48px;
+}
+/* ----------------------------------------------------------*/
+
+/* Sponsor Logos */
+/* Sponsor section */
+#sponsors {
+  background: #fff;
+  color: #333;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+#sponsors h2 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.sponsor-logos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 30px;
+  align-items: center;
+  justify-items: center;
+}
+
+.sponsor-logos img {
+  max-width: 75%;
+  
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+.sponsor-logos img:hover {
+  transform: scale(1.1);
+}
+
+/* stacked table styles removed - reverted to original table layout */
+
+/* Stacked table (card) layout for very small screens - light theme */
+@media (max-width: 600px) {
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  thead { display: none; }
+
+  tr {
+    margin-bottom: 1rem;
+    background: #ffffff; /* light card background */
+    color: #333333; /* dark text */
+    border-radius: 6px;
+    padding: 0.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: none;
+    white-space: normal;
+    color: #333333;
+  }
+
+  td::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    margin-right: 0.5rem;
+    color: #800000; /* accent color (gold/maroon) */
+  }
+
+  /* Links inside cells should be readable */
+  td a { color: #0066cc; text-decoration: underline; }
+
+  /* Remove table border so cards look clean */
+  table { border: none; }
+
+  /* Keep responsive wrapper usable */
+  .table-responsive { overflow: visible; }
+}
+
+/* ---------------- Modern, mobile-first polish ---------------- */
+:root{
+  --bg-strong: #580016; /* original deep maroon */
+  --card-bg: #ffffff;
+  --muted: #6b6b6b;
+  --accent: #800000; /* used for headings/links */
+  --text-dark: #232020;
+  --max-content-width: 1100px;
+}
+
+/* Make the site container centered and comfortable */
+main {
+  max-width: var(--max-content-width);
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+/* Section header: readable, modern title + subtitle */
+.section-header {
+  text-align: left;
+  margin: 0 0 1rem 0;
+  padding: 0.5rem 0 0.75rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.section-title {
+  font-size: 1.6rem;
+  margin: 0 0 0.25rem 0;
+  color: var(--text-dark);
+  letter-spacing: -0.4px;
+}
+.section-subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Decorative accent bar under the title on wide screens */
+@media (min-width: 700px) {
+  .section-header { display: flex; flex-direction: column; gap: 0.25rem; }
+  /* left accent bar for a modern look */
+  .section-header { padding-left: 1rem; position: relative; }
+  .section-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12px;
+    bottom: 12px;
+    width: 6px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--accent), #d4a017);
+  }
+  .section-head-row { display: flex; gap: 1rem; align-items: center; }
+  .section-icon svg { width: 44px; height: 44px; fill: var(--accent); display: block; }
+  .section-title { font-size: 1.8rem; }
+}
+
+@media (max-width: 699px) {
+  .section-head-row { display: flex; gap: 0.75rem; align-items: center; }
+  .section-icon svg { width: 36px; height: 36px; fill: var(--accent); }
+  .section-header { border-bottom: none; padding-bottom: 0.25rem; }
+}
+
+/* Header: modern, compact */
+header { padding: 0.5rem 1rem; }
+.header-container { gap: 1rem; }
+.logo img { height: 64px; }
+
+/* Navigation tweaks */
+nav ul { align-items: center; }
+nav a { color: var(--text-dark); }
+.menu-toggle { font-size: 1.5rem; }
+
+/* Cards (home, tournaments, standings, contact) */
+#home, section[id^="tournament-"], #contact .contact-card {
+  background: var(--card-bg);
+  color: var(--text-dark);
+  padding: 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  margin: 1rem auto;
+  max-width: 900px; /* a comfortable reading measure */
+}
+
+.content {
+  display: block;
+  background: var(--card-bg);
+  color: var(--text-dark);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 0.5rem 0 1rem 0;
+}
+.content .image-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: center;
+}
+.content .image-row img { width: 100%; height: auto; max-width: 520px; }
+
+@media (min-width: 900px) {
+  .content .image-row { flex-direction: row; }
+  .content .image-row img { width: 48%; }
+  .content { text-align: left; }
+}
+
+@media (max-width: 899px) {
+  .content .image-row { flex-direction: column; }
+}
+
+/* Improve table readability */
+table {
+  font-size: 0.95rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+thead th { position: sticky; top: 0; background: #333; color: #fff; }
+th, td { padding: 12px 10px; }
+
+/* Make mobile stacked cards use the .content card look */
+@media (max-width: 600px) {
+  tr { box-shadow: none; border: 1px solid rgba(0,0,0,0.06); }
+  td::before { color: var(--accent); }
+}
+
+/* Small visual polish for headings inside cards */
+#home h1, #home h2, section[id^="tournament-"] h2 {
+  color: var(--text-dark);
+  margin-bottom: 0.5rem;
+}
+
+/* Center headings for all tournament sections */
+section[id^="tournament-"] h2 {
+  text-align: center;
+}
+
+/* Standings: ensure it matches home card */
+/* #standings removed */
+
+/* Footer small polish */
+.site-footer { padding: 1.25rem 1rem; }
+
+/* keep existing styles but ensure good contrast for links inside cards */
+#contact a, section a { color: #0066cc; }
+
+/* Make schedule/prepay links look like buttons */
+#scheduleTable a {
+  display: inline-block;
+  padding: 0.4rem 0.7rem;
+  margin: 0.15rem 0.25rem;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+#scheduleTable a:hover,
+#scheduleTable a:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.14);
+  opacity: 0.98;
+}
+
+/* Make the separator smaller and neutral when links are shown as buttons */
+#scheduleTable td .sep { color: rgba(255,255,255,0.8); margin: 0 .5rem; }
+
+/* Division-specific button colors */
+#scheduleTable a.div-open { background: #d4a017; /* warm gold for Open */ color: #1b1b1b; }
+#scheduleTable a.div-open:hover, #scheduleTable a.div-open:focus { background: #c48f12; }
+
+#scheduleTable a.div-under { background: #2a9d8f; /* teal/green for Under */ }
+#scheduleTable a.div-under:hover, #scheduleTable a.div-under:focus { background: #21867a; }
+
+/* If you prefer the original accent color for other links, keep default --accent */
+#scheduleTable a:not(.div-open):not(.div-under) { background: var(--accent); }
+
+/* On very small screens where rows are stacked into cards, make buttons full-width */
+@media (max-width: 600px) {
+  #scheduleTable td { display: flex; flex-direction: column; gap: 0.25rem; }
+  #scheduleTable a { display: block; width: 100%; text-align: center; padding: 0.6rem 0.5rem; }
+  #scheduleTable td .sep { display: none; }
+}
+
+/* Payment links container: make buttons share equal width on wide screens */
+.pay-links {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  justify-content: center;
+}
+.pay-links a {
+  flex: 1 1 0; /* equal flexible width */
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  margin: 0; /* spacing handled by gap */
+}
+
+/* Remove separator visuals when pay-links container is used */
+#scheduleTable td .sep { display: none; }
+
+/* Generic button style for PDF / external links inside cards */
+.btn, .pdf-button {
+  display: inline-block;
+  padding: 0.55rem 0.85rem;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f6f6f6);
+  color: var(--text-dark);
+  text-decoration: none;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  font-weight: 700;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+.pdf-button:hover, .btn:hover, .pdf-button:focus, .btn:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+  opacity: 0.98;
+}
+
+/* Make PDF button full width on very small screens inside tournament cards */
+@media (max-width: 420px) {
+  .pdf-button { display: block; width: 100%; text-align: center; }
+}
+
+/* Tournament results: modern jump-link tiles */
+.tournament-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  margin: 0.5rem 0 1.25rem 0;
+}
+
+/* Tournament selector bar (single-row dropdown + Go) */
+.tournament-select-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #fff, #fafafa);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  margin: 0.5rem 0 1rem 0;
+}
+.tournament-select-bar select {
+  min-width: 320px;
+  max-width: 640px;
+  width: 60%;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+.tournament-select-bar .btn {
+  padding: 0.5rem 0.9rem;
+}
+
+/* Make selector full-width on small screens */
+@media (max-width: 600px) {
+  .tournament-select-bar { flex-direction: column; align-items: stretch; }
+  .tournament-select-bar select { width: 100%; min-width: 0; }
+  .tournament-select-bar .btn { width: 100%; }
+}
+
+.tournament-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  background: linear-gradient(180deg, #fff, #fafafa);
+  color: var(--text-dark);
+  text-decoration: none;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.tournament-tile:hover,
+.tournament-tile:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+.tournament-tile:focus {
+  outline: 3px solid rgba(128,0,0,0.12);
+  outline-offset: 3px;
+}
+
+.tournament-tile .tile-date {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.tournament-tile .tile-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+/* Make tiles full-width stacked on very small screens */
+@media (max-width: 420px) {
+  .tournament-grid { grid-template-columns: 1fr; gap: 10px; }
+  .tournament-tile { padding: 0.85rem 0.9rem; }
+}
+
+/* end modern polish */

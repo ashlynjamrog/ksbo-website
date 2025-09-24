@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitsap Scratch Bowlers Organization</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <!-- Logo -->
+      <div class="logo">
+        <img src="KSBOlogo.png" alt="KSBO Logo">
+      </div>
+
+      <!-- Hamburger Icon -->
+      <div class="menu-toggle" id="menu-toggle">
+        ☰
+      </div>
+
+      <!-- Navigation -->
+      <nav id="navbar">
+        <ul>
+          <li><a href="#home">Home</a></li>
+          
+          <li><a href="#table">Current Average List</a></li>
+          <li><a href="#schedule">Schedule</a></li>
+          <li><a href="#tournaments">Tournament Results</a></li>
+          <li><a href="#contact">The Board</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <section id="home" class="active">
+      <img src="/home.png" alt="Home Image" class="home-img">
+      <div class="sponsor-logos">
+        <img src="/sponsor1.jpg" alt="Sponsor 1">
+        <img src="/sponsor2.jpg" alt="Sponsor 2">
+      </div>
+      <br>
+
+    </section>
+    <br>
+
+
+    <!-- Schedule table populated from Google Sheets CSV -->
+    <section id="schedule">
+      <div class="content">
+        <header class="section-header" aria-labelledby="schedule-title">
+          <div class="section-head-row">
+            <span class="section-icon" aria-hidden="true">
+              <!-- calendar SVG -->
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H5V9h14v9zM7 11h5v5H7z"/></svg>
+            </span>
+            <div>
+              <h1 id="schedule-title" class="section-title">2025-2026 Season Schedule</h1>
+            </div>
+          </div>
+        </header>
+        <div class="table-responsive">
+          <table id="scheduleTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="table">
+      <div class="content">
+        <header class="section-header" aria-labelledby="averages-title">
+          <div class="section-head-row">
+            <span class="section-icon" aria-hidden="true">
+              <!-- calendar SVG (reuse) -->
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H5V9h14v9zM7 11h5v5H7z"/></svg>
+            </span>
+            <div>
+              <h1 id="averages-title" class="section-title">Average List for the 52nd Season</h1>
+              <p class="section-subtitle">The below average list will be used to determine average and division for the first half of the 52nd season. This list is updated in real time.</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="search-row">
+          
+          <input type="text" id="searchInput" placeholder="Search..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        </div>
+
+        <div class="table-responsive">
+          <table id="dataTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+      <section id="contact">
+
+        <div class="contact-card">
+          <h2 class="contact-card-title">Meet the Board of Directors</h2>
+          <div class="table-responsive">
+            <table id="contactTable">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <!-- Contact Prompt -->
+          <div class="contact-prompt">
+            <p>
+              If you have any questions, please reach out to a board member or email us at 
+              <a href="mailto:ksbo@gmail.com">ksbobowling@gmail.com</a>.
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+    <!-- Tournament results (merged from tournament-results.html) -->
+    <section id="tournaments">
+      <div class="content">
+        <header class="section-header" aria-labelledby="tournaments-title">
+          <div class="section-head-row">
+            <span class="section-icon" aria-hidden="true">
+              <!-- calendar SVG -->
+              <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 14H5V9h14v9zM7 11h5v5H7z"/></svg>
+            </span>
+            <div>
+              <h1 id="tournaments-title" class="section-title">Tournament Results</h1>
+              <p class="section-subtitle">Results for the 2025-2026 season.</p>
+            </div>
+          </div>
+        </header>
+
+        <div class="content-body">
+          <!-- Tournament selector: single bar with dropdown + Go button -->
+          <div class="tournament-select-bar" role="form" aria-label="Select tournament">
+            <label for="tournamentSelect" class="sr-only">Choose tournament</label>
+            <select id="tournamentSelect" name="tournament">
+              <option value="">-- Select a tournament --</option>
+              <option value="#tournament-1">Sept 27 — Open</option>
+              <option value="#tournament-2">Oct 4 — George Shafer Memorial</option>
+              <option value="#tournament-3">Oct 18 — Regular Singles</option>
+              <option value="#tournament-4">Nov 1 — QUAD Swiss</option>
+              <option value="#tournament-5">Nov 15 — Kitsap "The Vern" Match Play</option>
+              <option value="#tournament-6">Dec 6 — Toys for Tots Doubles</option>
+              <option value="#tournament-7">Jan 31 — Champs &amp; Non-Champs</option>
+              <option value="#tournament-8">Feb 14 — Regular Singles</option>
+              <option value="#tournament-9">Feb 28 — Tom Myers Sr. Memorial</option>
+              <option value="#tournament-10">Mar 21 — Swiss Trios</option>
+              <option value="#tournament-11">Apr 4 — Regular Singles</option>
+              <option value="#tournament-12">Apr 18 — Grand Finals</option>
+            </select>
+            <button id="tournamentGo" class="btn">Go</button>
+          </div>
+
+          <hr />
+
+          <!-- Per-tournament anchors with placeholder content -->
+          <section id="tournament-1" class="content">
+            <h2>Sept 27 Open</h2>
+            <p>Results and notes will be posted here.</p>
+           
+          </section>
+
+          <section id="tournament-2" class="content">
+            <h2>Oct 4 George Shafer Memorial</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-3" class="content">
+            <h2>Oct 18 Regular Singles</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-4" class="content">
+            <h2>Nov 1 QUAD Swiss</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-5" class="content">
+            <h2>Nov 15 Kitsap "The Vern" Match Play</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-6" class="content">
+            <h2>Dec 6 Toys for Tots Doubles</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-7" class="content">
+            <h2>Jan 31 Champs &amp; Non-Champs</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-8" class="content">
+            <h2>Feb 14 Regular Singles</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-9" class="content">
+            <h2>Feb 28 Tom Myers Sr. Memorial</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-10" class="content">
+            <h2>Mar 21 Swiss Trios</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-11" class="content">
+            <h2>Apr 4 Regular Singles</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+          <section id="tournament-12" class="content">
+            <h2>Apr 18 Grand Finals</h2>
+            <p>Results and notes will be posted here.</p>
+          </section>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="website code.js"></script>
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>Kitsap Scratch Bowlers Organization. Established 1973.</p>
+      <div class="social-links">
+        <a href="https://www.facebook.com/KSBOBOWLING" target="_blank" aria-label="Facebook">
+          <img src="Facebook.png" alt="Facebook" />
+        </a>
+        <a href="http://www.youtube.com/@KitsapScratchBowlers" target="_blank" aria-label="YouTube">
+          <img src="youtube.png" alt="YouTube" />
+        </a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
