@@ -405,6 +405,101 @@ main > section {
   #scheduleTable th.col-house, #scheduleTable td.col-house { min-width: 140px; }
 }
 
+/* Make tournament result tables visually match the schedule table */
+.results-table {
+  border-collapse: collapse;
+  background-color: #f1f1f1;
+  border: 3px solid #333;
+  color: #333;
+  width: 100%;
+  table-layout: auto;
+  text-align: left;
+  margin: 1rem 0;
+}
+
+.results-table th, .results-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #ddd;
+  vertical-align: top;
+}
+
+/* Header band for results tables uses the same dark header color */
+.results-table thead th {
+  background-color: var(--accent); /* maroon/red matching schedule accent */
+  color: #fff;
+  font-weight: 700;
+}
+
+/* subtle zebra striping like schedule rows */
+.results-table tbody tr:nth-child(2n) td { background: #f9f9f9; }
+
+/* keep hover behavior consistent */
+.results-table tbody tr:hover { background-color: #f2f2f2; }
+
+/* small responsive tweaks: shrink padding on narrow screens */
+@media (max-width: 600px) {
+  .results-table th, .results-table td { padding: 8px 10px; }
+}
+
+/* Make table captions visually match other section/tabs titles */
+.table-caption {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 10px 0;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+/* Center the caption and keep it above the table */
+.tournament-sheet-block { text-align: center; }
+
+/* Tournament photos placed under each division table */
+.tournament-photo {
+  width: 100%; /* fill available width but respect max-width */
+  max-width: 600px;
+  height: auto;
+  object-fit: contain; /* avoid cropping */
+  margin: 12px auto 20px auto;
+  display: block;
+  border-radius: 6px;
+}
+
+/* New caption style to match other tab/section titles: larger title + small maroon subtitle + divider */
+.table-caption {
+  display: block;
+  background: transparent; /* remove pill background, mirror other titles */
+  padding: 0;
+  border-radius: 0;
+}
+.table-caption .caption-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 auto 6px auto;
+  text-align: center;
+}
+.table-caption .caption-sub {
+  color: var(--accent);
+  font-weight: 700;
+  margin: 0 auto 8px auto;
+  text-align: center;
+}
+/* subtle divider below caption like other sections */
+.tournament-sheet-block::after {
+  content: '';
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: 1px;
+  background: rgba(0,0,0,0.08);
+  margin: 6px auto 12px auto;
+}
+
 /* Prepay/payment column: increase min-width so payment buttons have more room */
 #scheduleTable th.col-prepay, #scheduleTable td.col-prepay {
   min-width: 160px; /* base width */
@@ -428,12 +523,16 @@ main > section.active {
   transition: max-height 320ms ease, opacity 250ms ease, margin 220ms ease;
 }
 
-/* When a tournament is the URL target, reveal it */
+/* When a tournament is the URL target, reveal it.
+   Allow the section to grow naturally and don't clip overflowing content (images).
+   Using "max-height: none" and "overflow: visible" prevents tall images from being cut off.
+*/
 #tournaments section[id^="tournament-"]:target,
 #tournaments section[id^="tournament-"].open {
   display: block;
   opacity: 1;
-  max-height: 2400px; /* large enough for content */
+  max-height: none; /* allow natural height */
+  overflow: visible; /* ensure images/content are not clipped */
   margin-top: 1rem;
 }
 
@@ -922,3 +1021,10 @@ section[id^="tournament-"] h2 {
 }
 
 /* end modern polish */
+
+/* Ensure content is not covered by the footer on shorter viewports
+   Add extra bottom padding so tall images (tournament photos) remain fully visible
+   above the footer. Adjust the value if you still see overlap. */
+main {
+  padding-bottom: 160px;
+}

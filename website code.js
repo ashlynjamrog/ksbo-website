@@ -294,6 +294,151 @@ async function loadSchedule() {
 
 document.addEventListener("DOMContentLoaded", loadSchedule);
 
+// Load the provided tournament CSV and split into OPEN / UNDER tables inside #tournament-1
+async function loadTournament1Results() {
+  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
+  try {
+    const resp = await fetch(csv);
+    if (!resp.ok) {
+      console.warn('Failed to fetch tournament-1 CSV:', resp.status);
+      return;
+    }
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (!rows || rows.length < 2) return;
+
+    const headers = rows[0] || [];
+
+    // Find a likely Division column index (common header names)
+    let divIdx = headers.findIndex(h => /^(division|div|category|group)/i.test(h));
+    if (divIdx === -1) {
+      divIdx = headers.findIndex(h => /open|under/i.test(h));
+    }
+    if (divIdx === -1) divIdx = 1; // default to second column where Division commonly lives
+
+    // Determine which columns to omit (Date and Division)
+    const skipIndices = new Set();
+    headers.forEach((h, i) => {
+      if (/^date$/i.test(h) || /^(division|div)$/i.test(h)) skipIndices.add(i);
+    });
+
+    const openRows = [];
+    const underRows = [];
+    const otherRows = [];
+
+    rows.slice(1).forEach(r => {
+      const val = (r[divIdx] || '').toString().trim();
+      if (/^\s*open\s*$/i.test(val)) openRows.push(r);
+      else if (/^\s*under\s*$/i.test(val)) underRows.push(r);
+      else {
+        if (/open/i.test(val)) openRows.push(r);
+        else if (/under/i.test(val)) underRows.push(r);
+        else otherRows.push(r);
+      }
+    });
+
+    const section = document.getElementById('tournament-1');
+    if (!section) return;
+
+    // Clear prior inserted tables
+    const prev = section.querySelectorAll('.tournament-sheet-block');
+    prev.forEach(n => n.remove());
+
+    // Helper: build table HTML for a given set of rows, omitting skipIndices
+    function buildTableHtml(id, caption, hdrs, dataRows, skipSet) {
+      const filteredHdrs = hdrs.map((h, i) => ({ h, i })).filter(x => !skipSet.has(x.i)).map(x => x.h);
+      const thead = '<tr>' + filteredHdrs.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+      const tbody = (dataRows && dataRows.length)
+        ? dataRows.map(r => {
+            const cells = [];
+            hdrs.forEach((_, i) => {
+              if (skipSet.has(i)) return;
+              const raw = r[i];
+              const val = (raw === '#DIV/0!' || raw === 'NaN') ? '' : (raw || '');
+              cells.push(`<td>${val}</td>`);
+            });
+            return '<tr>' + cells.join('') + '</tr>';
+          }).join('')
+        : `<tr><td colspan="${Math.max(1, filteredHdrs.length)}">(no rows)</td></tr>`;
+
+      // allow caption to be a simple title string; optionally it may include a subtitle
+      // separated by a pipe character ("Title|Subtitle"). We render the title and
+      // optional subtitle so the caption can match other site tab headings.
+      const parts = String(caption || '').split('|').map(s => s.trim());
+      const title = parts[0] || '';
+      const subtitle = parts[1] || '';
+
+      return `\n<div class="tournament-sheet-block">\n  <div class="table-responsive">\n    <div class="table-caption">\n      <div class="caption-title">${title}</div>\n      ${subtitle ? `<div class="caption-sub">${subtitle}</div>` : ''}\n    </div>\n    <table id="${id}" class="results-table">\n      <thead>${thead}</thead>\n      <tbody>${tbody}</tbody>\n    </table>\n  </div>\n</div>`;
+    }
+
+    // Insert OPEN table then UNDER table. Use simple static captions
+    const openCaption = 'OPEN';
+    const underCaption = 'Under';
+
+    const openHtml = buildTableHtml('t1-open', openCaption, headers, openRows, skipIndices);
+    const underHtml = buildTableHtml('t1-under', underCaption, headers, underRows, skipIndices);
+
+    const titleEl = section.querySelector('h2');
+    if (titleEl) {
+      titleEl.insertAdjacentHTML('afterend', openHtml);
+      titleEl.insertAdjacentHTML('afterend', underHtml);
+    } else {
+      section.insertAdjacentHTML('beforeend', openHtml + underHtml);
+    }
+
+    // Attach data-labels for responsive stacked view
+    if (typeof attachDataLabels === 'function') {
+      attachDataLabels('t1-open');
+      attachDataLabels('t1-under');
+    }
+
+    // Insert result pictures under each division table (try common extensions)
+    function insertTournamentPhoto(containerId, baseName) {
+      try {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const img = document.createElement('img');
+        img.className = 'tournament-photo';
+        img.alt = baseName;
+        // try jpg then png then jpeg
+        const exts = ['jpg', 'png', 'jpeg'];
+        let idx = 0;
+        img.src = `TournamentPics/${baseName}.${exts[idx]}`;
+        img.onerror = function() {
+          idx++;
+          if (idx < exts.length) {
+            img.src = `TournamentPics/${baseName}.${exts[idx]}`;
+          } else {
+            // no image found, remove the element
+            img.remove();
+          }
+        };
+
+        // Place image after the table within the same .tournament-sheet-block if present
+        const block = container.closest('.tournament-sheet-block');
+        if (block) block.appendChild(img);
+        else container.parentElement.appendChild(img);
+      } catch (e) {
+        console.warn('Could not insert tournament photo for', baseName, e);
+      }
+    }
+
+    // Insert OPENTOP5 under OPEN table and UNDERTOP5 under Under table
+    // The table IDs are 't1-open' and 't1-under'
+    setTimeout(() => {
+      // Use the provided filenames for the division photos
+      insertTournamentPhoto('t1-open', 'KSBO-OPEN-OPENTOP5');
+      insertTournamentPhoto('t1-under', 'KSBO-OPEN-UNDERTOP5');
+    }, 80);
+
+  } catch (e) {
+    console.error('Error loading tournament-1 CSV:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadTournament1Results);
+
   
 // On load: prefer the published HTML (preserves sheet styling). If that fails, use CSV parsing.
 // Try to embed the published sheet via iframe; if that fails, fall back to HTML/CSV parsing
