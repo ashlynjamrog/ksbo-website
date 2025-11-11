@@ -42,15 +42,16 @@ header {
   }
 
   #home{
-    background: white;
-    padding: 1rem;
-    border-radius: 8px; 
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* subtle shadow */
-    text-align: center;
-    margin: 1rem auto;
-    justify-content: center;
-    max-width: 50%;
-  }
+      background: white;
+      padding: 1rem;
+      border-radius: 8px; 
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* subtle shadow */
+      text-align: center;
+      margin: 1rem auto;
+      justify-content: center;
+      max-width: 900px; /* use comfortable reading measure */
+      width: 100%;
+    }
    /* Logo */
   .home-img {
     height: auto;
@@ -67,7 +68,8 @@ section[id^="tournament-"] {
   text-align: center;
   margin: 1rem auto;
   justify-content: center;
-  max-width: 50%;
+  max-width: 900px; /* align with card max-width later in file */
+  width: 100%;
 }
 
 /* Ensure images inside tournament sections behave like the home image */
@@ -77,7 +79,8 @@ section[id^="tournament-"] img {
   margin: 0.5rem auto 0;
   max-width: 100%;
   height: auto;
-  width: 60%;
+  width: 100%; /* fill card width on small screens */
+  max-width: 700px; /* cap image width on large screens */
 }
 
 /* Standings removed — styles cleaned up */
@@ -187,6 +190,14 @@ section[id^="tournament-"] img {
     flex-direction: column;
     align-items: center;
     gap: 1rem;
+  }
+
+  /* Make mobile nav links comfortable to tap */
+  nav a {
+    display: block;
+    padding: 12px 16px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   nav.show {
