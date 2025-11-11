@@ -294,114 +294,98 @@ async function loadSchedule() {
 
 document.addEventListener("DOMContentLoaded", loadSchedule);
 
-// Load a multi-tournament CSV and render each tournament's rows into the
-// matching per-tournament section. The CSV is expected to have the tournament
-// identifier in the first column; other columns become the table columns.
-async function loadMultiTournamentCSV(csvUrl) {
-  function normalize(s) {
-    return (s || '') .toString()
-      .toLowerCase()
-      .replace(/[\u2018\u2019\u201c\u201d]/g, "") // smart quotes
-      .replace(/[^a-z0-9]+/g, ' ')
-      .trim();
-  }
-
+// Load the provided tournament CSV directly into the Sept 27 (tournament-1)
+async function loadTournament1Results() {
+  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
   try {
-    const resp = await fetch(csvUrl);
+    const resp = await fetch(csv);
     if (!resp.ok) {
-      console.warn('Failed to fetch tournament sheet:', resp.status);
-      return false;
+      console.warn('Failed to fetch tournament-1 CSV:', resp.status);
+      return;
     }
     const text = await resp.text();
     const rows = parseCSV(text);
-    if (!rows || rows.length < 2) return false;
+    if (!rows || rows.length < 1) return;
 
-    const headers = rows[0].slice(1); // drop first column (tournament key)
+    // Heuristic: the CSV may contain multiple tables separated by blank rows
+    // or repeated header rows. We'll split it into sub-tables and render each.
+    const tables = [];
+    let current = null;
 
-    // Build candidate map from per-tournament sections and select options
-    const sections = Array.from(document.querySelectorAll('#tournaments section[id^="tournament-"]'))
-      .map(sec => ({ id: sec.id, title: (sec.querySelector('h2')?.textContent || '').trim(), norm: normalize(sec.querySelector('h2')?.textContent || '') }));
+    function isBlankRow(r) {
+      return r.every(c => !c || String(c).trim() === '');
+    }
 
-    const selectOpts = Array.from(document.querySelectorAll('#tournamentSelect option'))
-      .map(opt => ({ id: opt.value.replace(/^#/, ''), title: (opt.textContent || '').trim(), norm: normalize(opt.textContent || '') }))
-      .filter(o => o.id);
+    function looksLikeHeader(r) {
+      // header usually contains some non-numeric text and at least 2 cells
+      const nonEmpty = r.filter(c => c && String(c).trim() !== '');
+      if (nonEmpty.length < 2) return false;
+      // if most cells are non-numeric (contain letters), treat as header
+      const nonNumericCount = nonEmpty.filter(c => /[A-Za-z]/.test(String(c))).length;
+      return nonNumericCount >= Math.max(1, Math.floor(nonEmpty.length / 3));
+    }
 
-    const candidates = sections.concat(selectOpts).reduce((acc, c) => {
-      acc[c.id] = c;
-      return acc;
-    }, {});
-
-    // Group rows by first-column raw key
-    const groups = {};
-    rows.slice(1).forEach(r => {
-      const key = (r[0] || '').trim();
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(r.slice(1));
-    });
-
-    // For each section, find matching group(s) and render only that group's rows
-    Object.values(candidates).forEach(candidate => {
-      const secEl = document.getElementById(candidate.id);
-      if (!secEl) return;
-
-      // Find group whose normalized key equals candidate.norm, or contains/contained
-      const matchedKeys = Object.keys(groups).filter(k => {
-        const nk = normalize(k);
-        if (!nk) return false;
-        if (nk === candidate.norm) return true;
-        if (candidate.norm.includes(nk) || nk.includes(candidate.norm)) return true;
-        return false;
-      });
-
-      // If multiple matched keys, concatenate their rows; otherwise empty
-      let matchedRows = [];
-      matchedKeys.forEach(k => { matchedRows = matchedRows.concat(groups[k]); });
-
-      // Render table for this section (only matchedRows)
-      const tableId = candidate.id + '-sheet-table';
-      if (matchedRows.length > 0) {
-        const thead = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-        const tbody = matchedRows.map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('');
-        const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
-
-        const existing = secEl.querySelector('table');
-        if (existing) existing.parentElement.innerHTML = tableHtml;
-        else {
-          const titleEl = secEl.querySelector('h2');
-          if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
-          else secEl.insertAdjacentHTML('beforeend', tableHtml);
-        }
-
-        if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
-      } else {
-        // No matched rows: remove any existing sheet table to avoid stale data
-        const existing = secEl.querySelector('table');
-        if (existing) existing.parentElement.remove();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (isBlankRow(row)) {
+        current = null; // end current table on blank row
+        continue;
       }
-    });
 
-    // Log any groups that didn't match a candidate (helpful for debugging)
-    Object.keys(groups).forEach(k => {
-      const nk = normalize(k);
-      const found = Object.values(candidates).some(c => {
-        const cn = c.norm;
-        return cn === nk || cn.includes(nk) || nk.includes(cn);
-      });
-      if (!found) console.warn('Unmatched tournament group in sheet:', k);
-    });
+      if (!current) {
+        // start a new table; if row looks like header use it, else treat first non-blank as header
+        if (looksLikeHeader(row)) {
+          current = { header: row, rows: [] };
+        } else {
+          // no clear header; create a synthetic header with column numbers
+          const cols = row.length;
+          const synthetic = Array.from({ length: cols }, (_, j) => `Col ${j + 1}`);
+          current = { header: synthetic, rows: [row] };
+        }
+        tables.push(current);
+        continue;
+      }
 
-    return true;
+      // If this row looks like a header and is different from current header,
+      // start a new table (some sheets repeat headers)
+      if (looksLikeHeader(row) && row.join('|') !== current.header.join('|')) {
+        current = { header: row, rows: [] };
+        tables.push(current);
+        continue;
+      }
+
+      // otherwise it's a data row for the current table
+      current.rows.push(row);
+    }
+
+    const section = document.getElementById('tournament-1');
+    if (!section) return;
+
+    // Remove existing sheet tables to avoid duplicates
+    const existingTables = section.querySelectorAll('.results-table');
+    existingTables.forEach(t => t.parentElement.remove());
+
+    // Render each detected sub-table
+    tables.forEach((tbl, idx) => {
+      const headers = tbl.header || [];
+      const thead = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+      const tbody = (tbl.rows || []).map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('') || '<tr><td colspan="'+Math.max(1, headers.length)+'">(no rows)</td></tr>';
+      const tableId = `tournament-1-sheet-table-${idx+1}`;
+      const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
+
+      // Insert each table after the H2; keep order
+      const titleEl = section.querySelector('h2');
+      if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
+      else section.insertAdjacentHTML('beforeend', tableHtml);
+
+      if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
+    });
   } catch (e) {
-    console.error('Error loading multi-tournament CSV', e);
-    return false;
+    console.error('Error loading tournament-1 CSV:', e);
   }
 }
 
-// Auto-load the provided multi-tournament sheet into the tournament sections
-document.addEventListener('DOMContentLoaded', () => {
-  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
-  loadMultiTournamentCSV(csv);
-});
+document.addEventListener('DOMContentLoaded', loadTournament1Results);
 
   
 // On load: prefer the published HTML (preserves sheet styling). If that fails, use CSV parsing.
