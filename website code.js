@@ -294,6 +294,96 @@ async function loadSchedule() {
 
 document.addEventListener("DOMContentLoaded", loadSchedule);
 
+// Load a tournament CSV that lists multiple tournaments in the first column.
+// The CSV's first column indicates the tournament (e.g. "Sept 27") — group
+// rows by that value and render each group's table into the best-matching
+// per-tournament section (by comparing normalized strings against the
+// section H2 titles and the select option text).
+async function loadTournamentSheet(csvUrl) {
+  try {
+    const resp = await fetch(csvUrl);
+    if (!resp.ok) {
+      console.warn('Failed to fetch tournament sheet:', csvUrl, resp.status);
+      return false;
+    }
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (!rows || rows.length < 2) return false;
+
+    // Group rows by the first column value
+    const groups = {};
+    const headers = rows[0];
+    rows.slice(1).forEach(r => {
+      const key = (r[0] || '').trim();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r.slice(1)); // store remaining columns per row
+    });
+
+    // Build a map of tournament section identifiers -> searchable text
+    const sections = Array.from(document.querySelectorAll('#tournaments section[id^="tournament-"]'))
+      .map(sec => ({ id: sec.id, title: (sec.querySelector('h2')?.textContent || '').trim() }));
+
+    // Also include option text from the select as possible matches
+    const selectOptions = Array.from(document.querySelectorAll('#tournamentSelect option'))
+      .map(opt => ({ id: opt.value.replace(/^#/, ''), title: (opt.textContent || '').trim() }))
+      .filter(o => o.id);
+
+    const candidates = sections.concat(selectOptions);
+
+    function normalize(s) {
+      return (s || '').toString().toLowerCase().replace(/[\W_]+/g, ' ').trim();
+    }
+
+    // For each group, find the best matching candidate and render the group's table
+    Object.keys(groups).forEach(key => {
+      const normalizedKey = normalize(key);
+      let match = candidates.find(c => normalize(c.title) === normalizedKey);
+      if (!match) {
+        // fallback: contains
+        match = candidates.find(c => normalize(c.title).includes(normalizedKey) || normalizedKey.includes(normalize(c.title)));
+      }
+
+      if (!match) {
+        console.warn('No matching tournament section found for group:', key);
+        return;
+      }
+
+      const sectionId = match.id;
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+
+      // Build a table using the original headers (drop first column)
+      const tableId = sectionId + '-sheet-table';
+      const thead = '<tr>' + headers.slice(1).map(h => `<th>${h}</th>`).join('') + '</tr>';
+      const tbody = groups[key].map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('');
+      const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
+
+      // If the section already has a table, replace it; otherwise append after H2
+      const existing = section.querySelector('table');
+      if (existing) {
+        existing.parentElement.innerHTML = tableHtml;
+      } else {
+        const titleEl = section.querySelector('h2');
+        if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
+        else section.insertAdjacentHTML('beforeend', tableHtml);
+      }
+
+      if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
+    });
+
+    return true;
+  } catch (e) {
+    console.error('Error loading tournament sheet', e);
+    return false;
+  }
+}
+
+// Auto-load the provided tournament sheet (multi-tournament CSV)
+document.addEventListener('DOMContentLoaded', () => {
+  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
+  loadTournamentSheet(csv);
+});
+
   
 // On load: prefer the published HTML (preserves sheet styling). If that fails, use CSV parsing.
 // Try to embed the published sheet via iframe; if that fails, fall back to HTML/CSV parsing
