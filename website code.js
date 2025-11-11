@@ -294,44 +294,114 @@ async function loadSchedule() {
 
 document.addEventListener("DOMContentLoaded", loadSchedule);
 
-// Load the provided tournament CSV directly into the Sept 27 (tournament-1)
-async function loadTournament1Results() {
-  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
+// Load a multi-tournament CSV and render each tournament's rows into the
+// matching per-tournament section. The CSV is expected to have the tournament
+// identifier in the first column; other columns become the table columns.
+async function loadMultiTournamentCSV(csvUrl) {
+  function normalize(s) {
+    return (s || '') .toString()
+      .toLowerCase()
+      .replace(/[\u2018\u2019\u201c\u201d]/g, "") // smart quotes
+      .replace(/[^a-z0-9]+/g, ' ')
+      .trim();
+  }
+
   try {
-    const resp = await fetch(csv);
+    const resp = await fetch(csvUrl);
     if (!resp.ok) {
-      console.warn('Failed to fetch tournament-1 CSV:', resp.status);
-      return;
+      console.warn('Failed to fetch tournament sheet:', resp.status);
+      return false;
     }
     const text = await resp.text();
     const rows = parseCSV(text);
-    if (!rows || rows.length < 2) return;
+    if (!rows || rows.length < 2) return false;
 
-    const headers = rows[0] || [];
-    const tbody = rows.slice(1).map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('');
-    const thead = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    const headers = rows[0].slice(1); // drop first column (tournament key)
 
-    const tableId = 'tournament-1-sheet-table';
-    const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
+    // Build candidate map from per-tournament sections and select options
+    const sections = Array.from(document.querySelectorAll('#tournaments section[id^="tournament-"]'))
+      .map(sec => ({ id: sec.id, title: (sec.querySelector('h2')?.textContent || '').trim(), norm: normalize(sec.querySelector('h2')?.textContent || '') }));
 
-    const section = document.getElementById('tournament-1');
-    if (!section) return;
-    const existing = section.querySelector('table');
-    if (existing) {
-      existing.parentElement.innerHTML = tableHtml;
-    } else {
-      const titleEl = section.querySelector('h2');
-      if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
-      else section.insertAdjacentHTML('beforeend', tableHtml);
-    }
+    const selectOpts = Array.from(document.querySelectorAll('#tournamentSelect option'))
+      .map(opt => ({ id: opt.value.replace(/^#/, ''), title: (opt.textContent || '').trim(), norm: normalize(opt.textContent || '') }))
+      .filter(o => o.id);
 
-    if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
+    const candidates = sections.concat(selectOpts).reduce((acc, c) => {
+      acc[c.id] = c;
+      return acc;
+    }, {});
+
+    // Group rows by first-column raw key
+    const groups = {};
+    rows.slice(1).forEach(r => {
+      const key = (r[0] || '').trim();
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r.slice(1));
+    });
+
+    // For each section, find matching group(s) and render only that group's rows
+    Object.values(candidates).forEach(candidate => {
+      const secEl = document.getElementById(candidate.id);
+      if (!secEl) return;
+
+      // Find group whose normalized key equals candidate.norm, or contains/contained
+      const matchedKeys = Object.keys(groups).filter(k => {
+        const nk = normalize(k);
+        if (!nk) return false;
+        if (nk === candidate.norm) return true;
+        if (candidate.norm.includes(nk) || nk.includes(candidate.norm)) return true;
+        return false;
+      });
+
+      // If multiple matched keys, concatenate their rows; otherwise empty
+      let matchedRows = [];
+      matchedKeys.forEach(k => { matchedRows = matchedRows.concat(groups[k]); });
+
+      // Render table for this section (only matchedRows)
+      const tableId = candidate.id + '-sheet-table';
+      if (matchedRows.length > 0) {
+        const thead = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        const tbody = matchedRows.map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('');
+        const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
+
+        const existing = secEl.querySelector('table');
+        if (existing) existing.parentElement.innerHTML = tableHtml;
+        else {
+          const titleEl = secEl.querySelector('h2');
+          if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
+          else secEl.insertAdjacentHTML('beforeend', tableHtml);
+        }
+
+        if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
+      } else {
+        // No matched rows: remove any existing sheet table to avoid stale data
+        const existing = secEl.querySelector('table');
+        if (existing) existing.parentElement.remove();
+      }
+    });
+
+    // Log any groups that didn't match a candidate (helpful for debugging)
+    Object.keys(groups).forEach(k => {
+      const nk = normalize(k);
+      const found = Object.values(candidates).some(c => {
+        const cn = c.norm;
+        return cn === nk || cn.includes(nk) || nk.includes(cn);
+      });
+      if (!found) console.warn('Unmatched tournament group in sheet:', k);
+    });
+
+    return true;
   } catch (e) {
-    console.error('Error loading tournament-1 CSV:', e);
+    console.error('Error loading multi-tournament CSV', e);
+    return false;
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadTournament1Results);
+// Auto-load the provided multi-tournament sheet into the tournament sections
+document.addEventListener('DOMContentLoaded', () => {
+  const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
+  loadMultiTournamentCSV(csv);
+});
 
   
 // On load: prefer the published HTML (preserves sheet styling). If that fails, use CSV parsing.
