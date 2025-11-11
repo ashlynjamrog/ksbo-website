@@ -242,35 +242,35 @@ async function loadSchedule() {
         // If this is the Prepay column, render per-row payment links when present
         if (i === prepayIdx) {
           const raw = (cell || '').trim();
-          let rowOpen = null, rowUnder = null;
 
-          if (raw) {
-            // Try labeled values first: Open: URL   Under: URL
-            const openMatch = raw.match(/open\s*[:=]\s*(https?:\/\/[^\s,;|"']+)/i);
-            const underMatch = raw.match(/under\s*[:=]\s*(https?:\/\/[^\s,;|"']+)/i);
-            if (openMatch) rowOpen = openMatch[1];
-            if (underMatch) rowUnder = underMatch[1];
+          // Extract labeled links like "OPEN: https://..." or "Guest= https://..."
+          const labeled = Array.from(raw.matchAll(/([^:,\n]+?)\s*[:=]\s*(https?:\/\/[^\s,;|"']+)/g))
+            .map(m => ({ label: m[1].trim(), url: m[2] }));
 
-            // If no labeled values, extract URLs in order
-            if (!rowOpen && !rowUnder) {
-              const urls = Array.from(raw.matchAll(/https?:\/\/[^\s,;|"']+/g)).map(m => m[0]);
-              if (urls.length === 1) {
-                // If single URL, guess whether it's Open or Under by context words
-                if (/under/i.test(raw)) rowUnder = urls[0];
-                else rowOpen = urls[0];
-              } else if (urls.length >= 2) {
-                rowOpen = urls[0];
-                rowUnder = urls[1];
-              }
+          let pairs = [];
+
+          if (labeled.length > 0) {
+            // Use labels exactly as provided in the sheet (trimmed)
+            pairs = labeled.map(p => ({ label: p.label, url: p.url }));
+          } else if (raw) {
+            // If no explicit labels, fall back to extracting URLs and guess labels
+            const urls = Array.from(raw.matchAll(/https?:\/\/[^\s,;|"']+/g)).map(m => m[0]);
+            if (urls.length === 1) {
+              const labelGuess = /under/i.test(raw) ? 'Under' : 'Open';
+              pairs.push({ label: labelGuess, url: urls[0] });
+            } else if (urls.length >= 2) {
+              pairs.push({ label: 'Open', url: urls[0] });
+              pairs.push({ label: 'Under', url: urls[1] });
             }
           }
 
-          const parts = [];
-          if (rowOpen) parts.push(`<a class="div-open" href="${rowOpen}" target="_blank" rel="noopener noreferrer">Open Division</a>`);
-          if (rowUnder) parts.push(`<a class="div-under" href="${rowUnder}" target="_blank" rel="noopener noreferrer">Under Division</a>`);
-
-          if (parts.length > 0) {
-            // Wrap payment links in a flex container so they share equal width
+          if (pairs.length > 0) {
+            const parts = pairs.map(p => {
+              // Use a simple class for styling; keep the original label text for the button
+              const text = (p.label || '').replace(/^\s+|\s+$/g, '');
+              const escText = text || 'Link';
+              return `<a class="div-pay" href="${p.url}" target="_blank" rel="noopener noreferrer">${escText}</a>`;
+            });
             const linksHtml = `<div class="pay-links">${parts.join('')}</div>`;
             tbody += `<td${classAttr}>${linksHtml}</td>`;
           } else {
