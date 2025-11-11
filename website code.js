@@ -294,7 +294,7 @@ async function loadSchedule() {
 
 document.addEventListener("DOMContentLoaded", loadSchedule);
 
-// Load the provided tournament CSV directly into the Sept 27 (tournament-1)
+// Load the provided tournament CSV and split into OPEN / UNDER tables inside #tournament-1
 async function loadTournament1Results() {
   const csv = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSY2jkIuOcAuJbRy2LKOUn5648drBahnb9BDtkyhFHyFLXP2Vox3eBCpgi51joO2tfH9fTcFjKVmxRD/pub?gid=0&single=true&output=csv';
   try {
@@ -305,81 +305,133 @@ async function loadTournament1Results() {
     }
     const text = await resp.text();
     const rows = parseCSV(text);
-    if (!rows || rows.length < 1) return;
+    if (!rows || rows.length < 2) return;
 
-    // Heuristic: the CSV may contain multiple tables separated by blank rows
-    // or repeated header rows. We'll split it into sub-tables and render each.
-    const tables = [];
-    let current = null;
+    const headers = rows[0] || [];
 
-    function isBlankRow(r) {
-      return r.every(c => !c || String(c).trim() === '');
+    // Find a likely Division column index (common header names)
+    let divIdx = headers.findIndex(h => /^(division|div|category|group)/i.test(h));
+    if (divIdx === -1) {
+      divIdx = headers.findIndex(h => /open|under/i.test(h));
     }
+    if (divIdx === -1) divIdx = 1; // default to second column where Division commonly lives
 
-    function looksLikeHeader(r) {
-      // header usually contains some non-numeric text and at least 2 cells
-      const nonEmpty = r.filter(c => c && String(c).trim() !== '');
-      if (nonEmpty.length < 2) return false;
-      // if most cells are non-numeric (contain letters), treat as header
-      const nonNumericCount = nonEmpty.filter(c => /[A-Za-z]/.test(String(c))).length;
-      return nonNumericCount >= Math.max(1, Math.floor(nonEmpty.length / 3));
-    }
+    // Determine which columns to omit (Date and Division)
+    const skipIndices = new Set();
+    headers.forEach((h, i) => {
+      if (/^date$/i.test(h) || /^(division|div)$/i.test(h)) skipIndices.add(i);
+    });
 
-    for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      if (isBlankRow(row)) {
-        current = null; // end current table on blank row
-        continue;
+    const openRows = [];
+    const underRows = [];
+    const otherRows = [];
+
+    rows.slice(1).forEach(r => {
+      const val = (r[divIdx] || '').toString().trim();
+      if (/^\s*open\s*$/i.test(val)) openRows.push(r);
+      else if (/^\s*under\s*$/i.test(val)) underRows.push(r);
+      else {
+        if (/open/i.test(val)) openRows.push(r);
+        else if (/under/i.test(val)) underRows.push(r);
+        else otherRows.push(r);
       }
-
-      if (!current) {
-        // start a new table; if row looks like header use it, else treat first non-blank as header
-        if (looksLikeHeader(row)) {
-          current = { header: row, rows: [] };
-        } else {
-          // no clear header; create a synthetic header with column numbers
-          const cols = row.length;
-          const synthetic = Array.from({ length: cols }, (_, j) => `Col ${j + 1}`);
-          current = { header: synthetic, rows: [row] };
-        }
-        tables.push(current);
-        continue;
-      }
-
-      // If this row looks like a header and is different from current header,
-      // start a new table (some sheets repeat headers)
-      if (looksLikeHeader(row) && row.join('|') !== current.header.join('|')) {
-        current = { header: row, rows: [] };
-        tables.push(current);
-        continue;
-      }
-
-      // otherwise it's a data row for the current table
-      current.rows.push(row);
-    }
+    });
 
     const section = document.getElementById('tournament-1');
     if (!section) return;
 
-    // Remove existing sheet tables to avoid duplicates
-    const existingTables = section.querySelectorAll('.results-table');
-    existingTables.forEach(t => t.parentElement.remove());
+    // Clear prior inserted tables
+    const prev = section.querySelectorAll('.tournament-sheet-block');
+    prev.forEach(n => n.remove());
 
-    // Render each detected sub-table
-    tables.forEach((tbl, idx) => {
-      const headers = tbl.header || [];
-      const thead = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-      const tbody = (tbl.rows || []).map(r => '<tr>' + r.map(c => `<td>${(c === '#DIV/0!' || c === 'NaN') ? '' : c}</td>`).join('') + '</tr>').join('') || '<tr><td colspan="'+Math.max(1, headers.length)+'">(no rows)</td></tr>';
-      const tableId = `tournament-1-sheet-table-${idx+1}`;
-      const tableHtml = `\n<div class="table-responsive">\n  <table id="${tableId}" class="results-table">\n    <thead>${thead}</thead>\n    <tbody>${tbody}</tbody>\n  </table>\n</div>`;
+    // Helper: build table HTML for a given set of rows, omitting skipIndices
+    function buildTableHtml(id, caption, hdrs, dataRows, skipSet) {
+      const filteredHdrs = hdrs.map((h, i) => ({ h, i })).filter(x => !skipSet.has(x.i)).map(x => x.h);
+      const thead = '<tr>' + filteredHdrs.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
-      // Insert each table after the H2; keep order
-      const titleEl = section.querySelector('h2');
-      if (titleEl) titleEl.insertAdjacentHTML('afterend', tableHtml);
-      else section.insertAdjacentHTML('beforeend', tableHtml);
+      const tbody = (dataRows && dataRows.length)
+        ? dataRows.map(r => {
+            const cells = [];
+            hdrs.forEach((_, i) => {
+              if (skipSet.has(i)) return;
+              const raw = r[i];
+              const val = (raw === '#DIV/0!' || raw === 'NaN') ? '' : (raw || '');
+              cells.push(`<td>${val}</td>`);
+            });
+            return '<tr>' + cells.join('') + '</tr>';
+          }).join('')
+        : `<tr><td colspan="${Math.max(1, filteredHdrs.length)}">(no rows)</td></tr>`;
 
-      if (typeof attachDataLabels === 'function') attachDataLabels(tableId);
-    });
+      // allow caption to be a simple title string; optionally it may include a subtitle
+      // separated by a pipe character ("Title|Subtitle"). We render the title and
+      // optional subtitle so the caption can match other site tab headings.
+      const parts = String(caption || '').split('|').map(s => s.trim());
+      const title = parts[0] || '';
+      const subtitle = parts[1] || '';
+
+      return `\n<div class="tournament-sheet-block">\n  <div class="table-responsive">\n    <div class="table-caption">\n      <div class="caption-title">${title}</div>\n      ${subtitle ? `<div class="caption-sub">${subtitle}</div>` : ''}\n    </div>\n    <table id="${id}" class="results-table">\n      <thead>${thead}</thead>\n      <tbody>${tbody}</tbody>\n    </table>\n  </div>\n</div>`;
+    }
+
+    // Insert OPEN table then UNDER table. Use simple static captions
+    const openCaption = 'OPEN';
+    const underCaption = 'Under';
+
+    const openHtml = buildTableHtml('t1-open', openCaption, headers, openRows, skipIndices);
+    const underHtml = buildTableHtml('t1-under', underCaption, headers, underRows, skipIndices);
+
+    const titleEl = section.querySelector('h2');
+    if (titleEl) {
+      titleEl.insertAdjacentHTML('afterend', openHtml);
+      titleEl.insertAdjacentHTML('afterend', underHtml);
+    } else {
+      section.insertAdjacentHTML('beforeend', openHtml + underHtml);
+    }
+
+    // Attach data-labels for responsive stacked view
+    if (typeof attachDataLabels === 'function') {
+      attachDataLabels('t1-open');
+      attachDataLabels('t1-under');
+    }
+
+    // Insert result pictures under each division table (try common extensions)
+    function insertTournamentPhoto(containerId, baseName) {
+      try {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const img = document.createElement('img');
+        img.className = 'tournament-photo';
+        img.alt = baseName;
+        // try jpg then png then jpeg
+        const exts = ['jpg', 'png', 'jpeg'];
+        let idx = 0;
+        img.src = `TournamentPics/${baseName}.${exts[idx]}`;
+        img.onerror = function() {
+          idx++;
+          if (idx < exts.length) {
+            img.src = `TournamentPics/${baseName}.${exts[idx]}`;
+          } else {
+            // no image found, remove the element
+            img.remove();
+          }
+        };
+
+        // Place image after the table within the same .tournament-sheet-block if present
+        const block = container.closest('.tournament-sheet-block');
+        if (block) block.appendChild(img);
+        else container.parentElement.appendChild(img);
+      } catch (e) {
+        console.warn('Could not insert tournament photo for', baseName, e);
+      }
+    }
+
+    // Insert OPENTOP5 under OPEN table and UNDERTOP5 under Under table
+    // The table IDs are 't1-open' and 't1-under'
+    setTimeout(() => {
+      // Use the provided filenames for the division photos
+      insertTournamentPhoto('t1-open', 'KSBO-OPEN-OPENTOP5');
+      insertTournamentPhoto('t1-under', 'KSBO-OPEN-UNDERTOP5');
+    }, 80);
+
   } catch (e) {
     console.error('Error loading tournament-1 CSV:', e);
   }
