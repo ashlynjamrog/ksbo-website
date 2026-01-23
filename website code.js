@@ -549,6 +549,108 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 300);
 });
 
+/* ---------------- Top Averages PDF loader ------------------
+   Embeds two Drive previews (Open / Under) into the Top Averages section
+*/
+const TOP_AVERAGES_DRIVE_IDS = {
+  open: '1ZUcZS3CsGWA4xfGGTV5jgQFHUVam8OtR',
+  under: '1qxJrNLRg6AzmxizrNd75L2pIq8YAQMBa'
+};
+
+function loadTopAveragesPdfs() {
+  const section = document.getElementById('top-averages');
+  if (!section) return;
+  // remove existing block if present
+  section.querySelectorAll('.top-averages-pdfs').forEach(n => n.remove());
+
+  const block = document.createElement('div');
+  block.className = 'top-averages-pdfs';
+  block.style.margin = '1rem 0';
+
+  // helper to create one column
+  function makeCol(title, driveId) {
+    const col = document.createElement('div');
+    col.className = 'tournament-pdf-block';
+    const preview = `https://drive.google.com/file/d/${driveId}/preview`;
+    const download = `https://drive.google.com/uc?export=download&id=${driveId}`;
+    col.innerHTML = `\n      <div class="pdf-controls">\n        <span style="font-weight:700;margin-right:8px;">${title}</span>\n        <a class="pdf-button" href="${download}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n      </div>\n      <iframe src="${preview}" class="pdf-embed" aria-label="${title} PDF" frameborder="0" loading="lazy"></iframe>\n    `;
+    return col;
+  }
+
+  const cols = document.createElement('div');
+  cols.style.display = 'grid';
+  cols.style.gridTemplateColumns = '1fr 1fr';
+  cols.style.gap = '1rem';
+
+  cols.appendChild(makeCol('Open Division', TOP_AVERAGES_DRIVE_IDS.open));
+  cols.appendChild(makeCol('Under Division', TOP_AVERAGES_DRIVE_IDS.under));
+
+  block.appendChild(cols);
+  const header = section.querySelector('.section-header') || section.querySelector('h1') || section;
+  if (header) header.insertAdjacentElement('afterend', block); else section.appendChild(block);
+}
+
+/* ---------------- Grand Finals PDF loader ------------------
+   Single PDF embed for the Grand Finals Eligibility tab
+*/
+const GRAND_FINALS_DRIVE_ID = '1cbFdSHXOE41t00zXWZ9kxQPzVTE3GaIi';
+
+function loadGrandFinalsPdf() {
+  const section = document.getElementById('grand-finals-eligibility');
+  if (!section) return;
+  // remove existing block if present
+  section.querySelectorAll('.grand-finals-pdf').forEach(n => n.remove());
+
+  const block = document.createElement('div');
+  block.className = 'grand-finals-pdf tournament-pdf-block';
+  const preview = `https://drive.google.com/file/d/${GRAND_FINALS_DRIVE_ID}/preview`;
+  const download = `https://drive.google.com/uc?export=download&id=${GRAND_FINALS_DRIVE_ID}`;
+  block.innerHTML = `\n    <div class="pdf-controls">\n      <span style="font-weight:700;margin-right:8px;">Grand Finals Eligibility</span>\n      <a class="pdf-button" href="${download}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n    </div>\n    <iframe src="${preview}" class="pdf-embed" aria-label="Grand Finals PDF" frameborder="0" loading="lazy"></iframe>\n  `;
+  const header = section.querySelector('.section-header') || section.querySelector('h1') || section;
+  if (header) header.insertAdjacentElement('afterend', block); else section.appendChild(block);
+}
+
+/* ---------------- All Star Points PDF loader ------------------
+   Embed two Drive previews (Open / Under) into the All Star Points section
+   Reuses the same markup/classes as Top Averages so existing CSS applies.
+*/
+const ALL_STAR_DRIVE_IDS = {
+  open: '1FKzXAmHdfNdZ1862ge67VhGkdMr2yXXm',
+  under: '1ANo7p2VLpSAmXd4IuYE17rMPSqeh7E2p'
+};
+
+function loadAllStarPointsPdfs() {
+  const section = document.getElementById('all-star-points');
+  if (!section) return;
+  // remove existing block if present
+  section.querySelectorAll('.all-star-pdfs').forEach(n => n.remove());
+
+  const block = document.createElement('div');
+  block.className = 'all-star-pdfs top-averages-pdfs'; // reuse top-averages layout styles
+  block.style.margin = '1rem 0';
+
+  function makeCol(title, driveId) {
+    const col = document.createElement('div');
+    col.className = 'tournament-pdf-block';
+    const preview = `https://drive.google.com/file/d/${driveId}/preview`;
+    const download = `https://drive.google.com/uc?export=download&id=${driveId}`;
+    col.innerHTML = `\n      <div class="pdf-controls">\n        <span style="font-weight:700;margin-right:8px;">${title}</span>\n        <a class="pdf-button" href="${download}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n      </div>\n      <iframe src="${preview}" class="pdf-embed" aria-label="${title} PDF" frameborder="0" loading="lazy"></iframe>\n    `;
+    return col;
+  }
+
+  const cols = document.createElement('div');
+  cols.style.display = 'grid';
+  cols.style.gridTemplateColumns = '1fr 1fr';
+  cols.style.gap = '1rem';
+
+  cols.appendChild(makeCol('Open Division', ALL_STAR_DRIVE_IDS.open));
+  cols.appendChild(makeCol('Under Division', ALL_STAR_DRIVE_IDS.under));
+
+  block.appendChild(cols);
+  const header = section.querySelector('.section-header') || section.querySelector('h1') || section;
+  if (header) header.insertAdjacentElement('afterend', block); else section.appendChild(block);
+}
+
 
 // Navigation -----------------------------------------------------------
 document.addEventListener("DOMContentLoaded", () => {
@@ -633,6 +735,18 @@ document.addEventListener("DOMContentLoaded", () => {
         void targetSection.offsetWidth;
         targetSection.classList.add("fade-in");
         targetSection.classList.add("active");
+        // Load Top Averages PDFs when that section is shown
+        if (target === 'top-averages' && typeof loadTopAveragesPdfs === 'function') {
+          loadTopAveragesPdfs();
+        }
+        // Load All Star Points PDFs when that section is shown
+        if (target === 'all-star-points' && typeof loadAllStarPointsPdfs === 'function') {
+          loadAllStarPointsPdfs();
+        }
+        // Load Grand Finals PDF when that section is shown
+        if (target === 'grand-finals-eligibility' && typeof loadGrandFinalsPdf === 'function') {
+          loadGrandFinalsPdf();
+        }
       }
     });
   });
@@ -745,4 +859,12 @@ document.addEventListener('DOMContentLoaded', () => {
       navigateToSelected();
     }
   });
+});
+
+// If page loaded with #top-averages hash, ensure PDFs are loaded
+document.addEventListener('DOMContentLoaded', () => {
+  const hash = location.hash ? location.hash.substring(1) : '';
+  if (hash === 'top-averages' && typeof loadTopAveragesPdfs === 'function') loadTopAveragesPdfs();
+  if (hash === 'all-star-points' && typeof loadAllStarPointsPdfs === 'function') loadAllStarPointsPdfs();
+  if (hash === 'grand-finals-eligibility' && typeof loadGrandFinalsPdf === 'function') loadGrandFinalsPdf();
 });

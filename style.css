@@ -156,6 +156,23 @@ section[id^="tournament-"] img {
     transition: color 0.3s;
   }
   
+  /* Add a caret to indicate the tournaments item is a dropdown. It will rotate when the
+     dropdown has the .open class (set by JS). We rely on the existing .nav-dropdown.open
+     toggle so this is purely presentational. */
+  .dropdown-toggle::after {
+    content: "▾";
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 0.9em;
+    transition: transform 180ms ease, opacity 160ms ease;
+    opacity: 0.9;
+    vertical-align: middle;
+  }
+  .nav-dropdown.open .dropdown-toggle::after {
+    transform: rotate(180deg);
+    opacity: 1;
+  }
+  
   nav a:hover {
     color: #800000; /* gold */
   }
@@ -328,7 +345,7 @@ td p, td span, td div {
 
 #contactTable th, #contactTable td {
   padding: 10px 12px;
-  text-align: left;
+  text-align: center; /* center the board member list */
   border-bottom: 1px solid rgba(0,0,0,0.06);
   white-space: normal;
   color: #232020;
@@ -440,6 +457,34 @@ main > section {
   .pdf-button { padding: 8px 10px; }
 }
 
+/* Top Averages PDF layout: two-column on desktop, stacked on mobile */
+.top-averages-pdfs > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .top-averages-pdfs > div { grid-template-columns: 1fr; }
+  .tournament-pdf-block .pdf-controls { flex-direction: column; align-items: center; }
+  .pdf-embed { height: 55vh; min-height: 360px; }
+}
+
+@media (max-width: 480px) {
+  .top-averages-pdfs > div { grid-template-columns: 1fr; }
+  .tournament-pdf-block .pdf-controls { flex-direction: column; gap: 0.35rem; }
+  .pdf-embed { height: 50vh; min-height: 240px; }
+}
+
+/* Stronger stacking rules for smaller mobile screens to ensure vertical layout */
+@media (max-width: 768px) {
+  .top-averages-pdfs > div { grid-template-columns: 1fr !important; grid-auto-flow: row; }
+  .top-averages-pdfs .tournament-pdf-block { width: 100% !important; display: block; }
+  .top-averages-pdfs .tournament-pdf-block .pdf-controls { flex-direction: column; align-items: stretch; text-align: left; }
+  .top-averages-pdfs .tournament-pdf-block .pdf-controls .pdf-button { margin-top: 6px; }
+  .pdf-embed { width: 100% !important; }
+}
+
 /* Column helpers for schedule table */
 /* Column helpers for schedule table */
 #scheduleTable td.col-date { white-space: nowrap; width: 1%; /* keep dates compact */ }
@@ -521,6 +566,16 @@ main > section {
   border-radius: 6px;
 }
 
+/* Board photo on the Board tab - responsive and uncropped */
+.board-photo {
+  width: 100%;
+  max-width: 720px; /* a comfortable width within the card */
+  height: auto;
+  object-fit: contain; /* avoid cropping */
+  margin: 12px auto 18px auto;
+  display: block;
+  border-radius: 6px;
+}
 /* New caption style to match other tab/section titles: larger title + small maroon subtitle + divider */
 .table-caption {
   display: block;
