@@ -458,7 +458,11 @@ function attachDataLabels(tableId) {
   rows.forEach(row => {
     const cells = Array.from(row.children);
     cells.forEach((cell, i) => {
-      const label = headers[i] || '';
+      // For the contact/Board table we don't want the header label (e.g. "Member:")
+      // repeated on every cell in the stacked mobile view. Leave data-label empty
+      // so mobile rendering resembles the desktop layout.
+      let label = headers[i] || '';
+      if (tableId === 'contactTable') label = '';
       cell.setAttribute('data-label', label);
     });
   });

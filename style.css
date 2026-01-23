@@ -339,17 +339,28 @@ td p, td span, td div {
 
 #contactTable {
   width: 100%;
-  border: 1px solid rgba(0,0,0,0.08);
+  border: none; /* remove outer border for a clean list look */
   background: transparent;
+  margin: 0 auto; /* center the table block */
+  max-width: 720px; /* keep the list a comfortable reading width */
+  justify-items: center;
 }
 
 #contactTable th, #contactTable td {
   padding: 10px 12px;
   text-align: center; /* center the board member list */
-  border-bottom: 1px solid rgba(0,0,0,0.06);
+  border-bottom: none; /* remove separators between rows */
   white-space: normal;
   color: #232020;
 }
+
+/* Remove row backgrounds/hover and any box shadows so entries look like a simple list */
+#contactTable tbody tr {
+  background: transparent;
+  box-shadow: none;
+}
+
+#contactTable tbody tr:hover { background: transparent; }
 
 #contactTable thead th {
   background: transparent;
@@ -770,7 +781,8 @@ nav a[aria-current="page"] {
   th,
   td,
   tr {
-    display: block;
+    /*display: block;*/
+    border-collapse: unset;
   }
 
   thead { display: none; }
@@ -809,6 +821,29 @@ nav a[aria-current="page"] {
 
   /* Keep responsive wrapper usable */
   .table-responsive { overflow: visible; }
+}
+
+/* Contact table: on small screens show the header once and suppress per-row labels
+   so the Board list renders as a simple centered list (like desktop) instead of
+   repeating "Member:" on each row. These overrides are intentionally scoped to
+   #contactTable only so other tables keep the helpful stacked labels. */
+@media (max-width: 600px) {
+  /* Show the table header for the contact table (override the global thead {display:none}) */
+  #contactTable thead { display: table-header-group; }
+
+  /* Don't prepend the data-label for contact table cells (prevents "Member:" repetition) */
+  #contactTable td::before { content: none; }
+
+  /* Make contact rows behave like normal table rows and center their content */
+  #contactTable tbody tr { display: table-row; background: transparent; box-shadow: none; border-radius: 0; }
+  #contactTable tbody td { display: table-cell; text-align: center; padding: 10px 12px; border-bottom: none; }
+
+  /* Ensure the contact table header doesn't look like a small boxed card */
+  #contactTable thead tr { background: transparent; border: none; box-shadow: none; }
+  #contactTable thead th { background: transparent; border: none; box-shadow: none; }
+
+  /* Style the lone header to match your screenshot: centered and accented */
+  #contactTable thead th { display: table-cell; text-align: center; background: transparent; color: var(--accent); font-weight: 700; }
 }
 
 /* ---------------- Modern, mobile-first polish ---------------- */
