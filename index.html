@@ -27,7 +27,16 @@
           
           <li><a href="#table">Current Average List</a></li>
           <li><a href="#schedule">Schedule</a></li>
-          <li><a href="#tournaments">Tournament Results</a></li>
+          <li class="nav-dropdown">
+            <a href="#" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Tournaments</a>
+            <ul class="dropdown-menu" role="menu" aria-label="Tournaments">
+              <li role="none"><a role="menuitem" href="#grand-finals-eligibility">Grand Finals Eligibility</a></li>
+              <li role="none"><a role="menuitem" href="#top-averages">Top Averages</a></li>
+              <li role="none"><a role="menuitem" href="#all-star-points">All Star Points</a></li>
+              <li role="separator" class="divider" aria-hidden="true"></li>
+              <li role="none"><a role="menuitem" href="#tournaments">Tournament Results (on this page)</a></li>
+            </ul>
+          </li>
           <li><a href="#contact">The Board</a></li>
         </ul>
       </nav>
@@ -118,6 +127,34 @@
         </div>
 
       </section>
+
+        <!-- New top-level tabs for tournament-related pages -->
+        <section id="grand-finals-eligibility">
+          <div class="content">
+            <header class="section-header"><h1 class="section-title">Grand Finals Eligibility</h1></header>
+            <div class="table-responsive">
+              <p style="padding:1rem;">Eligibility criteria and current list will appear here. I can wire this to your averages/tournament data on request.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="top-averages">
+          <div class="content">
+            <header class="section-header"><h1 class="section-title">Top Averages</h1></header>
+            <div class="table-responsive">
+              <p style="padding:1rem;">Top averages leaderboard will be displayed here. Option to filter/export can be added.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="all-star-points">
+          <div class="content">
+            <header class="section-header"><h1 class="section-title">All Star Points</h1></header>
+            <div class="table-responsive">
+              <p style="padding:1rem;">All Star Points standings and rules will be shown here. I can compute points from tournament results if you want.</p>
+            </div>
+          </div>
+        </section>
 
     <!-- Tournament results (merged from tournament-results.html) -->
     <section id="tournaments">
