@@ -458,11 +458,7 @@ function attachDataLabels(tableId) {
   rows.forEach(row => {
     const cells = Array.from(row.children);
     cells.forEach((cell, i) => {
-      // For the contact/Board table we don't want the header label (e.g. "Member:")
-      // repeated on every cell in the stacked mobile view. Leave data-label empty
-      // so mobile rendering resembles the desktop layout.
-      let label = headers[i] || '';
-      if (tableId === 'contactTable') label = '';
+      const label = headers[i] || '';
       cell.setAttribute('data-label', label);
     });
   });
@@ -501,7 +497,7 @@ async function loadTournamentPdf(sectionIdOrNumber) {
   // Remove any existing PDF block to avoid duplicates
   section.querySelectorAll('.tournament-pdf-block').forEach(n => n.remove());
 
-  // Candidate local filenames (try these via fetch to confirm existence)
+  // // Candidate local filenames (try these via fetch to confirm existence)
   const localCandidates = [
     `TournamentDocs/${n}.pdf`,
     `TournamentDocs/tournament-${n}.pdf`,
@@ -511,19 +507,19 @@ async function loadTournamentPdf(sectionIdOrNumber) {
     `TournamentDocs/KSBO-${n}-Results.pdf`
   ];
 
-  // If we have a Drive ID, prefer embedding the Drive preview (no preflight check)
-  const driveId = TOURNAMENT_DRIVE_IDS[n];
-  if (driveId) {
-    const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
-    // Insert preview iframe/object immediately — if the file is not shared or missing
-    // the Drive UI will show an error inside the frame. This is the most reliable
-    // embedding approach for public Drive files.
-    const block = document.createElement('div');
-    block.className = 'tournament-pdf-block';
-    block.innerHTML = `\n      <div class="pdf-controls">\n        <a class="pdf-button" href="https://drive.google.com/uc?export=download&id=${driveId}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n      </div>\n      <iframe src="${previewUrl}" class="pdf-embed" aria-label="Tournament PDF" frameborder="0" loading="lazy" width="100%" height="700"></iframe>\n    `;
-    const titleEl = section.querySelector('h2'); if (titleEl) titleEl.insertAdjacentElement('afterend', block); else section.appendChild(block);
-    return;
-  }
+  // // If we have a Drive ID, prefer embedding the Drive preview (no preflight check)
+  // const driveId = TOURNAMENT_DRIVE_IDS[n];
+  // if (driveId) {
+  //   const previewUrl = `https://drive.google.com/file/d/${driveId}/preview`;
+  //   // Insert preview iframe/object immediately — if the file is not shared or missing
+  //   // the Drive UI will show an error inside the frame. This is the most reliable
+  //   // embedding approach for public Drive files.
+  //   const block = document.createElement('div');
+  //   block.className = 'tournament-pdf-block';
+  //   block.innerHTML = `\n      <div class="pdf-controls">\n        <a class="pdf-button" href="https://drive.google.com/uc?export=download&id=${driveId}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n      </div>\n      <iframe src="${previewUrl}" class="pdf-embed" aria-label="Tournament PDF" frameborder="0" loading="lazy" width="100%" height="700"></iframe>\n    `;
+  //   const titleEl = section.querySelector('h2'); if (titleEl) titleEl.insertAdjacentElement('afterend', block); else section.appendChild(block);
+  //   return;
+  // }
 
   // Otherwise try local candidates (same-origin). Use HEAD via fetch to check quickly.
   for (const p of localCandidates) {
@@ -595,21 +591,41 @@ function loadTopAveragesPdfs() {
 }
 
 /* ---------------- Grand Finals PDF loader ------------------
-   Single PDF embed for the Grand Finals Eligibility tab
+   Embed two Drive previews (Open / Under) into the Grand Finals Eligibility section
 */
-const GRAND_FINALS_DRIVE_ID = '1cbFdSHXOE41t00zXWZ9kxQPzVTE3GaIi';
+const GRAND_FINALS_DRIVE_IDS = {
+  open: '1LwPbA1zqzyknh_6u4R0BRxQ6_ekwFN-b',
+  under: '1RRoT7aEv3UhDx45XF_julDQBC2j3QRx0'
+};
 
-function loadGrandFinalsPdf() {
+function loadGrandFinalsPdfs() {
   const section = document.getElementById('grand-finals-eligibility');
   if (!section) return;
   // remove existing block if present
   section.querySelectorAll('.grand-finals-pdf').forEach(n => n.remove());
 
   const block = document.createElement('div');
-  block.className = 'grand-finals-pdf tournament-pdf-block';
-  const preview = `https://drive.google.com/file/d/${GRAND_FINALS_DRIVE_ID}/preview`;
-  const download = `https://drive.google.com/uc?export=download&id=${GRAND_FINALS_DRIVE_ID}`;
-  block.innerHTML = `\n    <div class="pdf-controls">\n      <span style="font-weight:700;margin-right:8px;">Grand Finals Eligibility</span>\n      <a class="pdf-button" href="${download}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n    </div>\n    <iframe src="${preview}" class="pdf-embed" aria-label="Grand Finals PDF" frameborder="0" loading="lazy"></iframe>\n  `;
+  block.className = 'grand-finals-pdf top-averages-pdfs'; // reuse top-averages layout styles
+  block.style.margin = '1rem 0';
+
+  function makeCol(title, driveId) {
+    const col = document.createElement('div');
+    col.className = 'tournament-pdf-block';
+    const preview = `https://drive.google.com/file/d/${driveId}/preview`;
+    const download = `https://drive.google.com/uc?export=download&id=${driveId}`;
+    col.innerHTML = `\n      <div class="pdf-controls">\n        <span style="font-weight:700;margin-right:8px;">${title}</span>\n        <a class="pdf-button" href="${download}" target="_blank" rel="noopener noreferrer">Download PDF</a>\n      </div>\n      <iframe src="${preview}" class="pdf-embed" aria-label="${title} PDF" frameborder="0" loading="lazy"></iframe>\n    `;
+    return col;
+  }
+
+  const cols = document.createElement('div');
+  cols.style.display = 'grid';
+  cols.style.gridTemplateColumns = '1fr 1fr';
+  cols.style.gap = '1rem';
+
+  cols.appendChild(makeCol('Open Division', GRAND_FINALS_DRIVE_IDS.open));
+  cols.appendChild(makeCol('Under Division', GRAND_FINALS_DRIVE_IDS.under));
+
+  block.appendChild(cols);
   const header = section.querySelector('.section-header') || section.querySelector('h1') || section;
   if (header) header.insertAdjacentElement('afterend', block); else section.appendChild(block);
 }
@@ -748,8 +764,8 @@ document.addEventListener("DOMContentLoaded", () => {
           loadAllStarPointsPdfs();
         }
         // Load Grand Finals PDF when that section is shown
-        if (target === 'grand-finals-eligibility' && typeof loadGrandFinalsPdf === 'function') {
-          loadGrandFinalsPdf();
+        if (target === 'grand-finals-eligibility' && typeof loadGrandFinalsPdfs === 'function') {
+          loadGrandFinalsPdfs();
         }
       }
     });
@@ -870,5 +886,5 @@ document.addEventListener('DOMContentLoaded', () => {
   const hash = location.hash ? location.hash.substring(1) : '';
   if (hash === 'top-averages' && typeof loadTopAveragesPdfs === 'function') loadTopAveragesPdfs();
   if (hash === 'all-star-points' && typeof loadAllStarPointsPdfs === 'function') loadAllStarPointsPdfs();
-  if (hash === 'grand-finals-eligibility' && typeof loadGrandFinalsPdf === 'function') loadGrandFinalsPdf();
+  if (hash === 'grand-finals-eligibility' && typeof loadGrandFinalsPdfs === 'function') loadGrandFinalsPdfs();
 });
