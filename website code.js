@@ -594,8 +594,8 @@ function loadTopAveragesPdfs() {
    Embed two Drive previews (Open / Under) into the Grand Finals Eligibility section
 */
 const GRAND_FINALS_DRIVE_IDS = {
-  open: '1LwPbA1zqzyknh_6u4R0BRxQ6_ekwFN-b',
-  under: '1RRoT7aEv3UhDx45XF_julDQBC2j3QRx0'
+  open: '1G9bZr6NmPguhH6ksW5UJibC6z0i_-qL4',
+  under: '18BCjJyc17p-U6iUWvW-VXkY3RaqXooCv'
 };
 
 function loadGrandFinalsPdfs() {
